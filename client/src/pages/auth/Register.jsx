@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 import axios from "../../api/axios";
 import { useNavigate } from "react-router-dom";
-import { 
-  User, Mail, Phone, Lock, Eye, EyeOff, 
+import {
+  User, Mail, Phone, Lock, Eye, EyeOff,
   Droplet, FileText, Upload, Loader2, AlertCircle,
   MapPin, Navigation, Map, CheckCircle, Search
 } from "lucide-react";
@@ -35,18 +35,16 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [locationLoading, setLocationLoading] = useState(false);
   const [addressDetails, setAddressDetails] = useState({
-  confirmed: false,
-  showMap: false
-});
-const [searchValue, setSearchValue] = useState("");
-const [ready, setReady] = useState(true); // Set to true since we'll use manual/geo
-const mapRef = useRef(null); // To reference the map div
+    confirmed: false,
+    showMap: false
+  });
+  const [ready] = useState(true); // Set to true since we'll use manual/geo
+  const mapRef = useRef(null); // To reference the map div
 
-// Mock data for the dropdown (since the library is missing)
-const [status, setStatus] = useState("IDLE"); 
-const [data, setData] = useState([]);
-const [value, setValue] = useState(""); // This links to your search input
-const [mapLoaded, setMapLoaded] = useState(false); // To prevent map crashes
+  // Mock data for the dropdown (since the library is missing)
+  const [data, setData] = useState([]);
+  const [value, setValue] = useState(""); // This links to your search input
+  const [mapLoaded] = useState(false); // To prevent map crashes
 
   const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
@@ -58,11 +56,11 @@ const [mapLoaded, setMapLoaded] = useState(false); // To prevent map crashes
     }
 
     setLocationLoading(true);
-    
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        
+
         setForm(prev => ({
           ...prev,
           location: {
@@ -71,9 +69,9 @@ const [mapLoaded, setMapLoaded] = useState(false); // To prevent map crashes
             lon: longitude.toFixed(6)
           }
         }));
-        
+
         fetchLocationName(latitude, longitude);
-        
+
         // AUTO-CONFIRM FOR SEEKERS
         if (form.role === 'seeker') {
           setAddressDetails(prev => ({ ...prev, confirmed: true }));
@@ -89,29 +87,29 @@ const [mapLoaded, setMapLoaded] = useState(false); // To prevent map crashes
   };
   // Fetch location name from coordinates
   const fetchLocationName = async (lat, lon) => {
-  try {
-    // Get a free key from LocationIQ.com
-    const API_KEY = "pk.765b27e0d29e4ef8f9990f521bfa14b2"; 
-    const response = await fetch(
-      `https://us1.locationiq.com/v1/reverse.php?key=${API_KEY}&lat=${lat}&lon=${lon}&format=json`
-    );
-    const data = await response.json();
-    
-    // LocationIQ gives a "display_name" which is much more specific
-    if (data.display_name) {
-      // We take the first 3 parts of the address for a clean look
-      const specificArea = data.display_name.split(',').slice(0, 3).join(',');
-      
-      setForm(prev => ({
-        ...prev,
-        location: { ...prev.location, area: specificArea }
-      }));
-      setValue(specificArea);
+    try {
+      // Get a free key from LocationIQ.com
+      const API_KEY = "pk.765b27e0d29e4ef8f9990f521bfa14b2";
+      const response = await fetch(
+        `https://us1.locationiq.com/v1/reverse.php?key=${API_KEY}&lat=${lat}&lon=${lon}&format=json`
+      );
+      const data = await response.json();
+
+      // LocationIQ gives a "display_name" which is much more specific
+      if (data.display_name) {
+        // We take the first 3 parts of the address for a clean look
+        const specificArea = data.display_name.split(',').slice(0, 3).join(',');
+
+        setForm(prev => ({
+          ...prev,
+          location: { ...prev.location, area: specificArea }
+        }));
+        setValue(specificArea);
+      }
+    } catch (error) {
+      console.error("Location error:", error);
     }
-  } catch (error) {
-    console.error("Location error:", error);
-  }
-};
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -119,20 +117,20 @@ const [mapLoaded, setMapLoaded] = useState(false); // To prevent map crashes
     if (!form.name.trim()) newErrors.name = "Full name is required";
     if (!form.email) newErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(form.email)) newErrors.email = "Email is invalid";
-    
+
     if (!form.phone) newErrors.phone = "Phone number is required";
     else if (!/^01[3-9]\d{8}$/.test(form.phone)) newErrors.phone = "Valid BD number required";
-    
+
     if (!form.password) newErrors.password = "Password is required";
     else if (form.password.length < 6) newErrors.password = "Password must be at least 6 characters";
-    
+
     if (form.password !== form.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
-    
+
     if (form.role === "donor" && !form.bloodGroup) newErrors.bloodGroup = "Blood group is required";
-    
+
     if (!form.nidNumber) newErrors.nidNumber = "NID number is required";
     if (!nidImage) newErrors.nidImage = "NID image is required";
-    
+
     // Location validation (required for donors, optional for seekers)
     if (form.role === "donor") {
       if (!form.location.lat || !form.location.lon) {
@@ -153,7 +151,7 @@ const [mapLoaded, setMapLoaded] = useState(false); // To prevent map crashes
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name.startsWith("location.")) {
       const locationField = name.split(".")[1];
       setForm(prev => ({
@@ -166,7 +164,7 @@ const [mapLoaded, setMapLoaded] = useState(false); // To prevent map crashes
     } else {
       setForm(prev => ({ ...prev, [name]: value }));
     }
-    
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: "" }));
     }
@@ -185,32 +183,31 @@ const [mapLoaded, setMapLoaded] = useState(false); // To prevent map crashes
   };
 
   const handleSelect = (description) => {
-  setSearchValue(description);
-  setForm(prev => ({
-    ...prev,
-    location: { ...prev.location, area: description }
-  }));
-  setData([]); // Clear suggestions
-};
+    setForm(prev => ({
+      ...prev,
+      location: { ...prev.location, area: description }
+    }));
+    setData([]); // Clear suggestions
+  };
 
-const confirmLocation = () => {
-  if (!form.location.lat || !form.location.area) {
-    alert("Please get your location or enter an area first.");
-    return;
-  }
-  setAddressDetails(prev => ({ ...prev, confirmed: true }));
-};
+  const confirmLocation = () => {
+    if (!form.location.lat || !form.location.area) {
+      alert("Please get your location or enter an area first.");
+      return;
+    }
+    setAddressDetails(prev => ({ ...prev, confirmed: true }));
+  };
 
   const submit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
 
     try {
       const formData = new FormData();
-      
+
       // Add all form fields
       Object.keys(form).forEach((key) => {
         if (key === 'location') {
@@ -242,13 +239,13 @@ const confirmLocation = () => {
     }
   };
   const handleManualSearch = (e) => {
-  const val = e.target.value;
-  setValue(val); // Updates the UI
-  setForm(prev => ({
-    ...prev,
-    location: { ...prev.location, area: val } // Updates the data to be sent
-  }));
-};
+    const val = e.target.value;
+    setValue(val); // Updates the UI
+    setForm(prev => ({
+      ...prev,
+      location: { ...prev.location, area: val } // Updates the data to be sent
+    }));
+  };
 
   return (
     <div className="max-w-4xl w-full mx-auto">
@@ -276,9 +273,8 @@ const confirmLocation = () => {
                   placeholder="John Doe"
                   value={form.name}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all ${
-                    errors.name ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all ${errors.name ? 'border-red-300' : 'border-gray-300'
+                    }`}
                 />
               </div>
               {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
@@ -296,9 +292,8 @@ const confirmLocation = () => {
                   placeholder="john@example.com"
                   value={form.email}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all ${
-                    errors.email ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all ${errors.email ? 'border-red-300' : 'border-gray-300'
+                    }`}
                 />
               </div>
               {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
@@ -318,9 +313,8 @@ const confirmLocation = () => {
                   placeholder="01XXXXXXXXX"
                   value={form.phone}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all ${
-                    errors.phone ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all ${errors.phone ? 'border-red-300' : 'border-gray-300'
+                    }`}
                 />
               </div>
               {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
@@ -338,9 +332,8 @@ const confirmLocation = () => {
                   placeholder="••••••••"
                   value={form.password}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all ${
-                    errors.password ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all ${errors.password ? 'border-red-300' : 'border-gray-300'
+                    }`}
                 />
                 <button
                   type="button"
@@ -367,9 +360,8 @@ const confirmLocation = () => {
                 placeholder="••••••••"
                 value={form.confirmPassword}
                 onChange={handleChange}
-                className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all ${
-                  errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                  }`}
               />
               <button
                 type="button"
@@ -409,9 +401,8 @@ const confirmLocation = () => {
                   name="bloodGroup"
                   value={form.bloodGroup}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none appearance-none bg-white ${
-                    errors.bloodGroup ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none appearance-none bg-white ${errors.bloodGroup ? 'border-red-300' : 'border-gray-300'
+                    }`}
                 >
                   <option value="">Select Blood Group</option>
                   {bloodGroups.map(group => (
@@ -449,13 +440,13 @@ const confirmLocation = () => {
                 </button>
               </div>
             </div>
-            
+
             <p className="text-sm text-gray-600 mb-4">
-              {form.role === "donor" 
+              {form.role === "donor"
                 ? "Exact location is required for donors so seekers can find you accurately."
                 : "Your location helps us provide better service."}
             </p>
-            
+
             {/* Address Search with Autocomplete */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -471,9 +462,9 @@ const confirmLocation = () => {
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
                 />
               </div>
-              
+
               {/* Autocomplete Dropdown */}
-              {status === "OK" && (
+              {data.length > 0 && (
                 <div className="mt-1 border border-gray-200 rounded-lg bg-white shadow-lg max-h-60 overflow-y-auto">
                   {data.map(({ place_id, description }) => (
                     <div
@@ -486,41 +477,41 @@ const confirmLocation = () => {
                   ))}
                 </div>
               )}
-              
+
               <p className="mt-1 text-xs text-gray-500">
                 Start typing your address and select from suggestions
               </p>
             </div>
 
             {/* Simplified Location Details Display */}
-{form.location.area && (
-  <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-    <div className="flex items-start gap-3">
-      <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-      <div className="flex-1">
-        <h4 className="font-medium text-blue-800 mb-1">Selected Location</h4>
-        <p className="text-sm text-blue-700 mb-2">{form.location.area}</p>
-        
-        {form.location.lat && (
-          <div className="text-xs text-gray-600">
-            Coordinates: {form.location.lat}, {form.location.lon}
-          </div>
-        )}
-      </div>
-    </div>
-    
-    {!addressDetails.confirmed && (
-      <button
-        type="button"
-        onClick={confirmLocation}
-        className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-      >
-        <CheckCircle className="w-4 h-4" />
-        Confirm This Location
-      </button>
-    )}
-  </div>
-)}
+            {form.location.area && (
+              <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-blue-800 mb-1">Selected Location</h4>
+                    <p className="text-sm text-blue-700 mb-2">{form.location.area}</p>
+
+                    {form.location.lat && (
+                      <div className="text-xs text-gray-600">
+                        Coordinates: {form.location.lat}, {form.location.lon}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {!addressDetails.confirmed && (
+                  <button
+                    type="button"
+                    onClick={confirmLocation}
+                    className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Confirm This Location
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Map Preview (when address is selected) */}
             {addressDetails.showMap && !addressDetails.confirmed && mapLoaded && (
@@ -529,8 +520,8 @@ const confirmLocation = () => {
                   <h4 className="font-medium text-gray-900">Map Preview</h4>
                   <span className="text-xs text-gray-500">Confirm your location on map</span>
                 </div>
-                <div 
-                  id="map-preview" 
+                <div
+                  id="map-preview"
                   className="w-full h-64 rounded-lg border border-gray-300 overflow-hidden"
                   ref={mapRef}
                 >
@@ -599,9 +590,8 @@ const confirmLocation = () => {
                 placeholder="Enter your NID number (10, 13, or 17 digits)"
                 value={form.nidNumber}
                 onChange={handleChange}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all ${
-                  errors.nidNumber ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all ${errors.nidNumber ? 'border-red-300' : 'border-gray-300'
+                  }`}
               />
             </div>
             {errors.nidNumber && <p className="mt-1 text-sm text-red-600">{errors.nidNumber}</p>}
@@ -612,9 +602,8 @@ const confirmLocation = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Upload NID Photo *
             </label>
-            <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-all ${
-              errors.nidImage ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-red-400'
-            }`}>
+            <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-all ${errors.nidImage ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-red-400'
+              }`}>
               <input
                 type="file"
                 accept="image/*"
@@ -635,7 +624,7 @@ const confirmLocation = () => {
               </label>
             </div>
             {errors.nidImage && <p className="mt-1 text-sm text-red-600">{errors.nidImage}</p>}
-            
+
             {nidImage && (
               <div className="mt-4 p-4 bg-green-50 rounded-lg">
                 <div className="flex items-center gap-2 text-green-700">

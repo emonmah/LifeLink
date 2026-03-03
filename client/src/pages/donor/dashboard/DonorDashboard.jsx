@@ -1,7 +1,7 @@
 import { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../../../context/AuthContext';
 import axios from '../../../api/axios';
-import { Droplet, Heart, Award, Calendar, Clock, Bell, TrendingUp, MapPin } from 'lucide-react';
+import { Droplet, Heart, Award, Clock, Bell, TrendingUp, MapPin } from 'lucide-react';
 
 const DonorDashboard = () => {
   const { user } = useContext(AuthContext);
@@ -31,7 +31,7 @@ const DonorDashboard = () => {
         setStats({
           totalDonations,
           points: user?.totalPoints || 0,
-          livesSaved: totalDonations , // Approximation
+          livesSaved: totalDonations, // Approximation
           pendingRequests: pending.length
         });
 
@@ -182,7 +182,7 @@ const DonorDashboard = () => {
               <div key={activity._id || index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-full ${activity.status === 'completed' ? 'bg-red-100' :
-                      activity.status === 'pending' ? 'bg-blue-100' : 'bg-gray-100'
+                    activity.status === 'pending' ? 'bg-blue-100' : 'bg-gray-100'
                     }`}>
                     {activity.status === 'completed' ? <Droplet className="w-4 h-4 text-red-600" /> :
                       activity.status === 'pending' ? <Bell className="w-4 h-4 text-blue-600" /> :

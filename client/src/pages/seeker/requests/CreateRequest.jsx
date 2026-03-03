@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from '../../../api/axios';
-import { Hospital, MapPin, AlertTriangle, Calendar, Phone, User, Droplet, Send } from 'lucide-react';
+import { Hospital, MapPin, AlertTriangle, Calendar, Phone, Droplet, Send } from 'lucide-react';
 
 const CreateRequest = () => {
   const navigate = useNavigate();
@@ -49,7 +49,7 @@ const CreateRequest = () => {
 
     setLoading(true);
     try {
-      const res = await axios.post('/requests', formData);
+      await axios.post('/requests', formData);
       alert('Blood request sent successfully!');
       navigate('/seeker/requests');
     } catch (error) {
@@ -220,12 +220,12 @@ const CreateRequest = () => {
                     <label
                       key={level}
                       className={`flex items-center justify-center gap-2 p-4 border rounded-lg cursor-pointer transition-colors ${formData.urgency === level
-                          ? level === 'high'
-                            ? 'border-red-500 bg-red-50 text-red-700'
-                            : level === 'medium'
-                              ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
-                              : 'border-green-500 bg-green-50 text-green-700'
-                          : 'border-gray-300 hover:bg-gray-50'
+                        ? level === 'high'
+                          ? 'border-red-500 bg-red-50 text-red-700'
+                          : level === 'medium'
+                            ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
+                            : 'border-green-500 bg-green-50 text-green-700'
+                        : 'border-gray-300 hover:bg-gray-50'
                         }`}
                     >
                       <input

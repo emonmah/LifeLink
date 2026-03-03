@@ -22,7 +22,7 @@ export default function VerifyOTP() {
 
   const handleChange = (index, value) => {
     if (value.length > 1) return;
-    
+
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
@@ -42,7 +42,7 @@ export default function VerifyOTP() {
   const submit = async (e) => {
     e.preventDefault();
     const otpString = otp.join("");
-    
+
     if (otpString.length !== 6) {
       setError("Please enter the 6-digit OTP");
       return;
@@ -57,14 +57,14 @@ export default function VerifyOTP() {
         throw new Error("Session expired. Please register again.");
       }
 
-      const res = await axios.post("/auth/verify-email", {
+      await axios.post("/auth/verify-email", {
         otp: otpString,
         temporaryToken: tempToken
       });
 
       localStorage.removeItem("tempToken");
       setSuccess(true);
-      
+
       setTimeout(() => {
         navigate("/login");
       }, 3000);
@@ -170,9 +170,8 @@ export default function VerifyOTP() {
                 <button
                   type="button"
                   disabled={timer > 0}
-                  className={`font-medium ${
-                    timer > 0 ? "text-gray-400" : "text-red-600 hover:text-red-800"
-                  }`}
+                  className={`font-medium ${timer > 0 ? "text-gray-400" : "text-red-600 hover:text-red-800"
+                    }`}
                 >
                   Resend OTP {timer > 0 && `(${formatTime(timer)})`}
                 </button>

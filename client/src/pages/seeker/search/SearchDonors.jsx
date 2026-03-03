@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../../../api/axios';
 import { Search, MapPin, Droplet, Phone, Map, List, Award, Navigation, AlertCircle, CheckCircle, XCircle, Clock } from 'lucide-react';
@@ -16,7 +16,6 @@ const SearchDonors = () => {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [locationError, setLocationError] = useState('');
   const [usingCurrentLocation, setUsingCurrentLocation] = useState(false);
-  const [apiDebug, setApiDebug] = useState(null);
   const [stats, setStats] = useState({
     total: 0,
     withLocation: 0,
@@ -26,7 +25,7 @@ const SearchDonors = () => {
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
   // Get current location function
-  const getCurrentLocation = () => {
+  const getCurrentLocation = useCallback(() => {
     setLocationError('');
 
     if (!navigator.geolocation) {
@@ -74,9 +73,9 @@ const SearchDonors = () => {
         }
       );
     });
-  };
+  }, []);
 
-  const geocodeLocation = async (locationName) => {
+  const geocodeLocation = useCallback(async (locationName) => {
     try {
       if (locationName === 'Current Location' && currentLocation) {
         return {
@@ -146,9 +145,9 @@ const SearchDonors = () => {
         displayName: 'Dhaka'
       };
     }
-  };
+  }, [currentLocation]);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!searchParams.bloodGroup) {
       alert('Please select a blood group');
       return;
@@ -156,11 +155,9 @@ const SearchDonors = () => {
 
     setLoading(true);
     setDonors([]);
-    setApiDebug(null);
 
     try {
       let coordinates = null;
-      let displayLocation = '';
 
       // Handle location if provided
       if (searchParams.location && searchParams.location.trim() !== '') {
@@ -171,7 +168,6 @@ const SearchDonors = () => {
           } else {
             coordinates = currentLocation;
           }
-          displayLocation = 'Your Current Location';
         } else {
           // Geocode the entered location
           const geocoded = await geocodeLocation(searchParams.location);
@@ -179,7 +175,6 @@ const SearchDonors = () => {
             lat: geocoded.lat,
             lng: geocoded.lng
           };
-          displayLocation = geocoded.displayName;
         }
       }
 
@@ -203,13 +198,6 @@ const SearchDonors = () => {
       });
 
       console.log('✅ API Response:', response.data);
-
-      setApiDebug({
-        url: '/api/donor/search',
-        params: apiParams,
-        response: response.data,
-        timestamp: new Date().toISOString()
-      });
 
       if (response.data.success) {
         const formattedDonors = response.data.donors.map(donor => ({
@@ -252,7 +240,7 @@ const SearchDonors = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchParams, currentLocation, geocodeLocation, getCurrentLocation]);
 
   const handleUseCurrentLocation = async () => {
     try {
@@ -313,7 +301,7 @@ const SearchDonors = () => {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [searchParams, loading]);
+  }, [handleSearch, loading]);
 
   return (
     <div className="p-4 md:p-6">

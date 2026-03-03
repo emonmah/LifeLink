@@ -1,10 +1,8 @@
-import { useContext, useState, useEffect } from 'react';
+import { useContext, useState, useEffect, useCallback } from 'react';
 import { AuthContext } from '../../../context/AuthContext';
 import axios from '../../../api/axios';
-import { 
-  Users, Droplet, ShieldCheck, AlertCircle,
-  TrendingUp, Clock, CheckCircle, BarChart3,
-  RefreshCw, Heart, FileText, Calendar, Bell
+import {
+  RefreshCw, Heart, Calendar, Bell
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -27,59 +25,59 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [fetchDashboardData]);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Fetch users data from your existing endpoint
       const usersResponse = await axios.get('/admin/users', {
         params: {
           page: 1,
-          limit: 1, 
+          limit: 1,
           search: '',
           role: '',
           verified: ''
         }
       });
-      
+
       // Fetch donation requests
       const donationsResponse = await axios.get('/admin/requests');
-      
+
       // Calculate today's date for filtering
       const today = new Date();
       const todayStart = new Date(today.setHours(0, 0, 0, 0));
       const todayEnd = new Date(today.setHours(23, 59, 59, 999));
-      
+
       // Process donations
       const allDonations = donationsResponse.data.requests || [];
-      const pendingVerification = allDonations.filter(d => 
+      const pendingVerification = allDonations.filter(d =>
         d.status === 'completed' && !d.verified
       ).length;
-      
+
       const todayRequests = allDonations.filter(d => {
         const requestDate = new Date(d.requestDate || d.createdAt);
         return requestDate >= todayStart && requestDate <= todayEnd;
       }).length;
-      
-      const emergencyRequests = allDonations.filter(d => 
+
+      const emergencyRequests = allDonations.filter(d =>
         d.urgency === 'high' || d.urgency === 'emergency'
       ).length;
-      
+
       // Process user stats from your API
       const userStats = usersResponse.data.stats || {};
       const pendingNIDResponse = await axios.get('/admin/users/pending-nid');
       const pendingNID = pendingNIDResponse.data.count || 0;
-      
+
       // Calculate active donors (users with donor role and active status)
-      const activeDonorsCount = usersResponse.data.users?.filter(u => 
+      const activeDonorsCount = usersResponse.data.users?.filter(u =>
         u.role === 'donor' && u.status === 'active'
       ).length || 0;
-      
+
       // Calculate total verified donations
       const verifiedDonations = allDonations.filter(d => d.verified).length;
-      
+
       // Set the stats
       setStats({
         totalUsers: userStats.totalUsers || 0,
@@ -93,16 +91,16 @@ const AdminDashboard = () => {
         totalDonations: allDonations.length,
         verifiedDonations: verifiedDonations
       });
-      
+
       // Fetch recent activity (from donations and user updates)
       const recentDonations = allDonations
         .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
         .slice(0, 5);
-      
+
       const recentActivities = recentDonations.map(donation => {
         let action = '';
         let status = '';
-        
+
         if (donation.verified) {
           action = 'Donation verified';
           status = 'verified';
@@ -119,7 +117,7 @@ const AdminDashboard = () => {
           action = 'New donation request';
           status = 'pending';
         }
-        
+
         return {
           user: donation.donorId?.name || donation.seekerId?.name || 'Unknown User',
           action: action,
@@ -127,10 +125,10 @@ const AdminDashboard = () => {
           status: status
         };
       });
-      
+
       setRecentActivity(recentActivities);
       setLastUpdated(new Date().toLocaleTimeString());
-      
+
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       // Fallback to mock data if API fails
@@ -146,7 +144,7 @@ const AdminDashboard = () => {
         totalDonations: 450,
         verifiedDonations: 432
       });
-      
+
       setRecentActivity([
         { user: 'John Doe', action: 'NID approved', time: '10 mins ago', status: 'approved' },
         { user: 'Jane Smith', action: 'Donation verified', time: '30 mins ago', status: 'verified' },
@@ -156,90 +154,90 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const formatTimeAgo = (dateString) => {
     if (!dateString) return 'Just now';
-    
+
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-    
+
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins} mins ago`;
     if (diffHours < 24) return `${diffHours} hours ago`;
     if (diffDays < 7) return `${diffDays} days ago`;
-    
+
     return date.toLocaleDateString();
   };
 
   const statCards = [
-    { 
-      title: 'Total Users', 
-      value: stats.totalUsers, 
-      icon: Users, 
+    {
+      title: 'Total Users',
+      value: stats.totalUsers,
+      icon: Users,
       color: 'blue',
       description: `${stats.verifiedUsers} verified`
     },
-    { 
-      title: 'Pending NID', 
-      value: stats.pendingNID, 
-      icon: ShieldCheck, 
+    {
+      title: 'Pending NID',
+      value: stats.pendingNID,
+      icon: ShieldCheck,
       color: 'yellow',
       description: 'Need verification'
     },
-    { 
-      title: 'Active Donors', 
-      value: stats.activeDonors, 
-      icon: Droplet, 
+    {
+      title: 'Active Donors',
+      value: stats.activeDonors,
+      icon: Droplet,
       color: 'red',
       description: 'Ready to donate'
     },
-    { 
-      title: 'Pending Donations', 
-      value: stats.pendingDonations, 
-      icon: AlertCircle, 
+    {
+      title: 'Pending Donations',
+      value: stats.pendingDonations,
+      icon: AlertCircle,
       color: 'purple',
       description: 'Need verification'
     },
-    { 
-      title: 'Requests Today', 
-      value: stats.requestsToday, 
-      icon: TrendingUp, 
+    {
+      title: 'Requests Today',
+      value: stats.requestsToday,
+      icon: TrendingUp,
       color: 'green',
       description: 'Last 24 hours'
     },
-    { 
-      title: 'Total Donations', 
-      value: stats.totalDonations, 
-      icon: Heart, 
+    {
+      title: 'Total Donations',
+      value: stats.totalDonations,
+      icon: Heart,
       color: 'orange',
       description: `${stats.verifiedDonations} verified`
     },
   ];
 
   const quickActions = [
-    { 
-      label: 'Verify NIDs', 
-      icon: ShieldCheck, 
-      path: '/admin/users/nid-verification', 
+    {
+      label: 'Verify NIDs',
+      icon: ShieldCheck,
+      path: '/admin/users/nid-verification',
       color: 'red',
       count: stats.pendingNID
     },
-    { 
-      label: 'Verify Donations', 
-      icon: CheckCircle, 
-      path: '/admin/donations', 
+    {
+      label: 'Verify Donations',
+      icon: CheckCircle,
+      path: '/admin/donations',
       color: 'blue',
       count: stats.pendingDonations
     },
-    { 
-      label: 'Manage Users', 
-      icon: Users, 
-      path: '/admin/users', 
+    {
+      label: 'Manage Users',
+      icon: Users,
+      path: '/admin/users',
       color: 'green',
       count: stats.totalUsers
     },
@@ -320,7 +318,7 @@ const AdminDashboard = () => {
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-900">Recent Activity</h2>
-          <a 
+          <a
             href="/admin/donations"
             className="text-sm text-red-600 hover:text-red-800 font-medium"
           >
@@ -374,7 +372,7 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white rounded-xl shadow-md p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-gray-900">Donation Statistics</h3>
@@ -395,7 +393,7 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white rounded-xl shadow-md p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-gray-900">Today's Overview</h3>
@@ -431,7 +429,7 @@ const getColorClass = (color, type = 'text', shade = '600') => {
     green: { text: `text-green-${shade}`, bg: `bg-green-${shade}` },
     orange: { text: `text-orange-${shade}`, bg: `bg-orange-${shade}` },
   };
-  
+
   return colorMap[color]?.[type] || `text-gray-${shade}`;
 };
 
@@ -442,12 +440,12 @@ const getStatusColorClass = (status, type = 'bg') => {
     blocked: { text: 'text-red-600', bg: 'bg-red-100' },
     pending: { text: 'text-yellow-600', bg: 'bg-yellow-100' },
   };
-  
+
   return colorMap[status]?.[type] || 'bg-gray-100';
 };
 
 const getStatusIcon = (status) => {
-  switch(status) {
+  switch (status) {
     case 'approved': return <ShieldCheck className="w-4 h-4 text-green-600" />;
     case 'verified': return <CheckCircle className="w-4 h-4 text-blue-600" />;
     case 'blocked': return <AlertCircle className="w-4 h-4 text-red-600" />;

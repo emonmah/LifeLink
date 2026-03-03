@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from '../../../api/axios';
-import { Calendar, MapPin, Clock, ArrowLeft, Filter, Download } from 'lucide-react';
+import { Calendar, MapPin, Clock, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const DonationHistory = () => {
@@ -62,8 +62,8 @@ const DonationHistory = () => {
                                 key={status}
                                 onClick={() => setFilter(status)}
                                 className={`px-4 py-2 rounded-lg capitalize transition-colors ${filter === status
-                                        ? 'bg-red-600 text-white'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    ? 'bg-red-600 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                             >
                                 {status}

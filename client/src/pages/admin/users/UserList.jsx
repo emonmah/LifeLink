@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from '../../../api/axios';
-import { Search, Filter, MoreVertical, Eye, CheckCircle, XCircle, UserCheck, UserX, RefreshCw, Ban, Mail, Phone, Calendar, Shield, Droplet } from 'lucide-react';
+import { Search, Filter, MoreVertical, Eye, CheckCircle, XCircle, UserCheck, RefreshCw, Ban, Calendar, Shield, Droplet } from 'lucide-react';
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
@@ -14,14 +14,10 @@ const UserList = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [viewMode, setViewMode] = useState('table');
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // First, get ALL users without filters
       const response = await axios.get('/admin/users', {
         params: {
@@ -31,11 +27,11 @@ const UserList = () => {
           verified: ''
         }
       });
-      
+
       if (response.data.success) {
         const allUsersData = response.data.users || [];
         setAllUsers(allUsersData);
-        
+
         // Calculate stats from all users
         const calculatedStats = {
           totalUsers: allUsersData.length,
@@ -46,7 +42,7 @@ const UserList = () => {
           donorUsers: allUsersData.filter(u => u.role === 'donor').length,
           seekerUsers: allUsersData.filter(u => u.role === 'seeker').length
         };
-        
+
         setStats(calculatedStats);
         applyFilters(allUsersData, searchTerm, roleFilter, statusFilter, nidFilter);
       } else {
@@ -58,32 +54,36 @@ const UserList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, roleFilter, statusFilter, nidFilter]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const applyFilters = (userList, search, role, status, nidStatus) => {
     const filtered = userList.filter(user => {
       // Search filter
-      const matchesSearch = 
+      const matchesSearch =
         user.name?.toLowerCase().includes(search.toLowerCase()) ||
         user.email?.toLowerCase().includes(search.toLowerCase()) ||
         user.phone?.includes(search) ||
         user.nidNumber?.includes(search);
-      
+
       // Role filter
       const matchesRole = role === 'all' || user.role === role;
-      
+
       // Status filter
       const matchesStatus = status === 'all' || user.status === status;
-      
+
       // NID Status filter
-      const matchesNID = nidStatus === 'all' || 
+      const matchesNID = nidStatus === 'all' ||
         (nidStatus === 'verified' && user.nidVerified) ||
         (nidStatus === 'pending' && !user.nidVerified && user.nidNumber) ||
         (nidStatus === 'no-nid' && (!user.nidNumber || user.nidNumber === ''));
-      
+
       return matchesSearch && matchesRole && matchesStatus && matchesNID;
     });
-    
+
     setUsers(filtered);
   };
 
@@ -93,7 +93,7 @@ const UserList = () => {
   };
 
   const handleFilterChange = (type, value) => {
-    switch(type) {
+    switch (type) {
       case 'role':
         setRoleFilter(value);
         break;
@@ -103,9 +103,11 @@ const UserList = () => {
       case 'nid':
         setNidFilter(value);
         break;
+      default:
+        break;
     }
     setTimeout(() => {
-      applyFilters(allUsers, searchTerm, 
+      applyFilters(allUsers, searchTerm,
         type === 'role' ? value : roleFilter,
         type === 'status' ? value : statusFilter,
         type === 'nid' ? value : nidFilter
@@ -115,25 +117,25 @@ const UserList = () => {
 
   const handleApproveNID = async (userId) => {
     try {
-      const response = await axios.post('/admin/users/nid-approve', { 
-        userId, 
-        approve: true 
+      const response = await axios.post('/admin/users/nid-approve', {
+        userId,
+        approve: true
       });
-      
+
       if (response.data.success) {
         alert('NID approved successfully!');
-        setAllUsers(prev => prev.map(user => 
-          user._id === userId 
+        setAllUsers(prev => prev.map(user =>
+          user._id === userId
             ? { ...user, nidVerified: true, nidStatus: 'approved', status: 'active' }
             : user
         ));
-        
-        setUsers(prev => prev.map(user => 
-          user._id === userId 
+
+        setUsers(prev => prev.map(user =>
+          user._id === userId
             ? { ...user, nidVerified: true, nidStatus: 'approved', status: 'active' }
             : user
         ));
-        
+
         if (selectedUser?._id === userId) {
           setSelectedUser(prev => ({ ...prev, nidVerified: true, nidStatus: 'approved', status: 'active' }));
         }
@@ -146,23 +148,23 @@ const UserList = () => {
 
   const handleRejectNID = async (userId) => {
     try {
-      const response = await axios.post('/admin/users/nid-approve', { 
-        userId, 
-        approve: false 
+      const response = await axios.post('/admin/users/nid-approve', {
+        userId,
+        approve: false
       });
-      
+
       if (response.data.success) {
         alert('NID rejected!');
-        
+
         // Update the user in the list
-        setAllUsers(prev => prev.map(user => 
-          user._id === userId 
+        setAllUsers(prev => prev.map(user =>
+          user._id === userId
             ? { ...user, nidVerified: false, nidStatus: 'rejected', status: 'rejected' }
             : user
         ));
-        
-        setUsers(prev => prev.map(user => 
-          user._id === userId 
+
+        setUsers(prev => prev.map(user =>
+          user._id === userId
             ? { ...user, nidVerified: false, nidStatus: 'rejected', status: 'rejected' }
             : user
         ));
@@ -178,22 +180,22 @@ const UserList = () => {
 
     try {
       // Create block/unblock endpoint or use existing
-      const response = await axios.put(`/admin/users/${userId}/status`, { 
-        status: block ? 'blocked' : 'active' 
+      const response = await axios.put(`/admin/users/${userId}/status`, {
+        status: block ? 'blocked' : 'active'
       });
-      
+
       if (response.data.success) {
         alert(`User ${block ? 'blocked' : 'unblocked'} successfully!`);
-        
+
         // Update the user in the list
-        setAllUsers(prev => prev.map(user => 
-          user._id === userId 
+        setAllUsers(prev => prev.map(user =>
+          user._id === userId
             ? { ...user, status: block ? 'blocked' : 'active' }
             : user
         ));
-        
-        setUsers(prev => prev.map(user => 
-          user._id === userId 
+
+        setUsers(prev => prev.map(user =>
+          user._id === userId
             ? { ...user, status: block ? 'blocked' : 'active' }
             : user
         ));
@@ -204,7 +206,7 @@ const UserList = () => {
     }
   };
 
-  const getStatusBadge = (status) => {
+  /* const getStatusBadge = (status) => {
     const styles = {
       active: 'bg-green-100 text-green-800',
       pending: 'bg-yellow-100 text-yellow-800',
@@ -217,13 +219,13 @@ const UserList = () => {
         {status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown'}
       </span>
     );
-  };
+  }; */
 
   const getNIDBadge = (nidVerified, nidNumber) => {
     if (!nidNumber || nidNumber === '') {
       return <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">No NID</span>;
     }
-    
+
     return nidVerified ? (
       <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Verified</span>
     ) : (
@@ -265,7 +267,7 @@ const UserList = () => {
               Grid
             </button>
           </div>
-          <button 
+          <button
             onClick={fetchUsers}
             className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
           >
@@ -281,22 +283,22 @@ const UserList = () => {
           <div className="text-2xl font-bold text-gray-900">{stats.totalUsers || 0}</div>
           <div className="text-sm text-gray-500 mt-1">Total Users</div>
         </div>
-        
+
         <div className="bg-white rounded-xl shadow p-4">
           <div className="text-2xl font-bold text-green-600">{stats.verifiedUsers || 0}</div>
           <div className="text-sm text-gray-500 mt-1">Verified</div>
         </div>
-        
+
         <div className="bg-white rounded-xl shadow p-4">
           <div className="text-2xl font-bold text-purple-600">{stats.donorUsers || 0}</div>
           <div className="text-sm text-gray-500 mt-1">Donors</div>
         </div>
-        
+
         <div className="bg-white rounded-xl shadow p-4">
           <div className="text-2xl font-bold text-blue-600">{stats.seekerUsers || 0}</div>
           <div className="text-sm text-gray-500 mt-1">Seekers</div>
         </div>
-        
+
         <div className="bg-white rounded-xl shadow p-4">
           <div className="text-2xl font-bold text-indigo-600">{stats.adminUsers || 0}</div>
           <div className="text-sm text-gray-500 mt-1">Admins</div>
@@ -324,7 +326,7 @@ const UserList = () => {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
             />
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <select
               value={roleFilter}
@@ -336,7 +338,7 @@ const UserList = () => {
               <option value="seeker">Seekers</option>
               <option value="admin">Admins</option>
             </select>
-            
+
             <select
               value={statusFilter}
               onChange={(e) => handleFilterChange('status', e.target.value)}
@@ -348,7 +350,7 @@ const UserList = () => {
               <option value="blocked">Blocked</option>
               <option value="rejected">Rejected</option>
             </select>
-            
+
             <select
               value={nidFilter}
               onChange={(e) => handleFilterChange('nid', e.target.value)}
@@ -359,17 +361,17 @@ const UserList = () => {
               <option value="pending">NID Pending</option>
               <option value="no-nid">No NID</option>
             </select>
-            
+
             <div className="flex gap-2">
-              <button 
+              <button
                 type="submit"
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 <Search className="w-4 h-4" />
                 Search
               </button>
-              
-              <button 
+
+              <button
                 type="button"
                 onClick={() => {
                   setSearchTerm('');
@@ -424,11 +426,10 @@ const UserList = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          user.role === 'donor' ? 'bg-red-100 text-red-800' :
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.role === 'donor' ? 'bg-red-100 text-red-800' :
                           user.role === 'seeker' ? 'bg-blue-100 text-blue-800' :
-                          'bg-purple-100 text-purple-800'
-                        }`}>
+                            'bg-purple-100 text-purple-800'
+                          }`}>
                           {user.role?.charAt(0).toUpperCase() + user.role?.slice(1) || 'User'}
                         </span>
                         <div className="text-xs text-gray-500 mt-1">
@@ -436,24 +437,24 @@ const UserList = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {user.role === 'seeker'?<span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Verified</span>:getNIDBadge(user.nidVerified, user.nidNumber)}
+                        {user.role === 'seeker' ? <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Verified</span> : getNIDBadge(user.nidVerified, user.nidNumber)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-500">{formatDate(user.createdAt)}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <button 
+                          <button
                             onClick={() => setSelectedUser(user)}
                             className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                        
-                          
+
+
                           {user.status !== 'blocked' ? (
-                            <button 
+                            <button
                               onClick={() => handleBlockUser(user._id, true)}
                               className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                               title="Block User"
@@ -461,7 +462,7 @@ const UserList = () => {
                               <Ban className="w-4 h-4" />
                             </button>
                           ) : (
-                            <button 
+                            <button
                               onClick={() => handleBlockUser(user._id, false)}
                               className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
                               title="Unblock User"
@@ -469,7 +470,7 @@ const UserList = () => {
                               <UserCheck className="w-4 h-4" />
                             </button>
                           )}
-                          
+
                           <button className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors">
                             <MoreVertical className="w-4 h-4" />
                           </button>
@@ -484,7 +485,7 @@ const UserList = () => {
                         <Search className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                         <p className="text-lg font-medium">No users found</p>
                         <p className="mt-1">Try adjusting your search filters</p>
-                        <button 
+                        <button
                           onClick={() => {
                             setSearchTerm('');
                             setRoleFilter('all');
@@ -523,11 +524,10 @@ const UserList = () => {
                       </div>
                     </div>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    user.role === 'donor' ? 'bg-red-100 text-red-800' :
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.role === 'donor' ? 'bg-red-100 text-red-800' :
                     user.role === 'seeker' ? 'bg-blue-100 text-blue-800' :
-                    'bg-purple-100 text-purple-800'
-                  }`}>
+                      'bg-purple-100 text-purple-800'
+                    }`}>
                     {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
                   </span>
                 </div>
@@ -560,7 +560,7 @@ const UserList = () => {
                 </div>
 
                 <div className="flex justify-between pt-4 border-t border-gray-200">
-                  <button 
+                  <button
                     onClick={() => setSelectedUser(user)}
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                   >
@@ -569,14 +569,14 @@ const UserList = () => {
                   <div className="flex gap-2">
                     {user.nidNumber && !user.nidVerified && (
                       <>
-                        <button 
+                        <button
                           onClick={() => handleApproveNID(user._id)}
                           className="p-1 text-green-600 hover:text-green-800"
                           title="Approve NID"
                         >
                           <CheckCircle className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleRejectNID(user._id)}
                           className="p-1 text-red-600 hover:text-red-800"
                           title="Reject NID"
@@ -603,7 +603,7 @@ const UserList = () => {
               <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               <h3 className="text-xl font-bold text-gray-900 mb-2">No users found</h3>
               <p className="text-gray-600 mb-6">Try adjusting your search filters</p>
-              <button 
+              <button
                 onClick={() => {
                   setSearchTerm('');
                   setRoleFilter('all');
@@ -634,18 +634,18 @@ const UserList = () => {
                   ×
                 </button>
               </div>
-              
+
               <div className="flex flex-col md:flex-row gap-6 mb-6">
                 <div className="flex-shrink-0">
                   <div className="w-24 h-24 bg-gradient-to-r from-red-600 to-pink-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
                     {selectedUser.name?.charAt(0) || 'U'}
                   </div>
                 </div>
-                
+
                 <div className="flex-1">
                   <h4 className="text-2xl font-bold text-gray-900 mb-2">{selectedUser.name}</h4>
                   <p className="text-gray-600 mb-4">{selectedUser.email}</p>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Role</p>
@@ -658,7 +658,7 @@ const UserList = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <h5 className="font-medium text-gray-900 mb-3">Additional Information</h5>
@@ -669,7 +669,7 @@ const UserList = () => {
                         <p className="font-medium">{selectedUser.nidNumber}</p>
                       </div>
                     )}
-                    
+
                     <div>
                       <span className="text-sm text-gray-500">Total Points:</span>
                       <p className="font-medium">{selectedUser.totalPoints || 0}</p>
@@ -680,7 +680,7 @@ const UserList = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <h5 className="font-medium text-gray-900 mb-3">Account Information</h5>
                   <div className="space-y-2">
@@ -695,7 +695,7 @@ const UserList = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
                 <button
                   onClick={() => setSelectedUser(null)}

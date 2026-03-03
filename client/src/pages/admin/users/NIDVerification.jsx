@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from '../../../api/axios';
-import { ShieldCheck, XCircle, Eye, CheckCircle, AlertCircle, RefreshCw, MapPin } from 'lucide-react';
+import { ShieldCheck, XCircle, Eye, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 
 const NIDVerification = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
@@ -21,9 +21,9 @@ const NIDVerification = () => {
           'Content-Type': 'application/json'
         }
       });
-      
+
       console.log('API Response:', res.data);
-      
+
       if (res) {
         setPendingUsers(res.data.users || []);
       } else {
@@ -39,7 +39,7 @@ const NIDVerification = () => {
 
   const handleApprove = async (userId) => {
     try {
-      const response = await axios.post('/admin/users/nid-approve', 
+      const response = await axios.post('/admin/users/nid-approve',
         { userId, approve: true },
         {
           headers: {
@@ -48,12 +48,12 @@ const NIDVerification = () => {
           }
         }
       );
-      
+
       if (response.data) {
         alert(`User ${response.users?.name || userId} approved successfully!`);
-        
+
         setPendingUsers(prev => prev.filter(user => user._id !== userId));
-        
+
         // Clear selected user if it was the approved one
         if (selectedUser?._id === userId) {
           setSelectedUser(null);
@@ -70,20 +70,20 @@ const NIDVerification = () => {
 
   const handleReject = async (userId) => {
     try {
-      const response = await axios.delete('/admin/users/nid-reject',{ 
+      const response = await axios.delete('/admin/users/nid-reject', {
         data: { userId },
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-          } 
-    });
-      
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
       if (response.data.success) {
         alert(`User ${response.data.user?.name || userId} rejected!`);
-        
+
         // Update the list - remove the rejected user
         setPendingUsers(prev => prev.filter(user => user._id !== userId));
-        
+
         // Clear selected user if it was the rejected one
         if (selectedUser?._id === userId) {
           setSelectedUser(null);
@@ -99,20 +99,20 @@ const NIDVerification = () => {
   };
 
   const handleViewNID = (user) => {
-  console.log('Selected user:', user);
-  
-  if (user.nidImageBase64) {
-    setSelectedImage(user.nidImageBase64);
-  } else if (user.nidImageUrl) {
-    const filename = user.nidImageUrl.split('/').pop();
-    const imageUrl = `http://localhost:8080/api/admin/nid-image/${filename}`;
-    setSelectedImage(imageUrl);
-  } else {
-    setSelectedImage('https://via.placeholder.com/400x300.png?text=NID+Image+Not+Available');
-  }
-  
-  setSelectedUser(user);
-};
+    console.log('Selected user:', user);
+
+    if (user.nidImageBase64) {
+      setSelectedImage(user.nidImageBase64);
+    } else if (user.nidImageUrl) {
+      const filename = user.nidImageUrl.split('/').pop();
+      const imageUrl = `http://localhost:8080/api/admin/nid-image/${filename}`;
+      setSelectedImage(imageUrl);
+    } else {
+      setSelectedImage('https://via.placeholder.com/400x300.png?text=NID+Image+Not+Available');
+    }
+
+    setSelectedUser(user);
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -174,7 +174,7 @@ const NIDVerification = () => {
                         <p className="text-sm text-gray-600">{user.email}</p>
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div>
                         <p className="text-sm text-gray-500">Phone</p>
@@ -185,12 +185,12 @@ const NIDVerification = () => {
                         <p className="font-medium">{user.nidNumber}</p>
                       </div>
                     </div>
-                    
+
                     <p className="text-sm text-gray-500">
                       Registered: {formatDate(user.createdAt)}
                     </p>
                   </div>
-                  
+
                   <div className="flex flex-col gap-2 ml-4">
                     <button
                       onClick={() => handleViewNID(user)}
@@ -224,7 +224,7 @@ const NIDVerification = () => {
             <h3 className="text-lg font-bold text-gray-900 mb-4">
               {selectedUser ? `${selectedUser.name}'s NID` : 'NID Preview'}
             </h3>
-            
+
             {selectedUser ? (
               <div className="space-y-4">
                 {/* User Info */}
@@ -249,7 +249,7 @@ const NIDVerification = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Image Preview */}
                 <div className="border-2 border-dashed border-gray-300 rounded-lg overflow-hidden">
                   <img
@@ -262,7 +262,7 @@ const NIDVerification = () => {
                     }}
                   />
                 </div>
-                
+
                 {/* Action Buttons for Current User */}
                 <div className="flex gap-2 pt-4">
                   <button
@@ -280,7 +280,7 @@ const NIDVerification = () => {
                     Reject NID
                   </button>
                 </div>
-                
+
                 {/* Verification Guidelines */}
                 <div className="text-sm text-gray-600 mt-4 pt-4 border-t">
                   <p className="mb-2 flex items-center gap-1">

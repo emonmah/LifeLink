@@ -4,7 +4,6 @@ import { CheckCircle, Clock, XCircle, AlertCircle, Filter, Search, Calendar } fr
 
 const DonationList = () => {
   const [donations, setDonations] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -20,8 +19,6 @@ const DonationList = () => {
       // setDonations(mockDonations); // Removed mock data set
     } catch (error) {
       console.error('Error fetching donations:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -45,14 +42,14 @@ const DonationList = () => {
     );
   };
 
-  const getStatusIcon = (status) => {
+  /* const getStatusIcon = (status) => {
     switch (status) {
       case 'completed': return <CheckCircle className="w-4 h-4" />;
       case 'accepted': return <Clock className="w-4 h-4" />;
       case 'rejected': return <XCircle className="w-4 h-4" />;
       default: return <AlertCircle className="w-4 h-4" />;
     }
-  };
+  }; */
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';

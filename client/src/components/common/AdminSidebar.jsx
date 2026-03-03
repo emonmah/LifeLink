@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
   Home, Users, ShieldCheck, CheckCircle,
-  BarChart3, Settings, FileText
+  BarChart3, Settings
 } from 'lucide-react';
 
 const AdminSidebar = () => {
