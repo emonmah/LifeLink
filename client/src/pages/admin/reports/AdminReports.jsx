@@ -1,6 +1,6 @@
 // src/pages/admin/reports/AdminReports.jsx
 import {
-    BarChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+    XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 import { Users, Droplet, Activity, TrendingUp } from 'lucide-react';

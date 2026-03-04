@@ -2,6 +2,8 @@ import { useContext, useState, useEffect, useCallback } from 'react';
 import { AuthContext } from '../../../context/AuthContext';
 import axios from '../../../api/axios';
 import {
+  Users, Droplet, ShieldCheck, AlertCircle,
+  TrendingUp, Clock, CheckCircle,
   RefreshCw, Heart, Calendar, Bell
 } from 'lucide-react';
 
@@ -22,10 +24,6 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState([]);
   const [lastUpdated, setLastUpdated] = useState('');
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -155,6 +153,10 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const formatTimeAgo = (dateString) => {
     if (!dateString) return 'Just now';
